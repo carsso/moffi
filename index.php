@@ -97,65 +97,107 @@ for ($i = 0; $i <= 27; $i++) {
 
 ?>
 <!doctype html>
-<html lang="fr">
+<html lang="fr" class="bg-white">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <title><?php echo CONFIG['title'] ?></title>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="text-center mt-3 mb-4">
-                <?php echo CONFIG['title'] ?><br/>
-                <small class="text-muted">Réservations des prochaines semaines</small> -
-                <small><a href="<?php echo CONFIG['reservationUrl'] ?>" target="_blank">Réserver sur Moffi</a></small>
-            </h1>
+<div class="px-4">
+    <div class="py-4 px-4">
+        <div class="text-center">
+            <p class="mt-1 text-3xl font-extrabold text-gray-900">
+                <?php echo CONFIG['title'] ?>
+            </p>
+            <p class="mt-1 mx-auto text-xl text-gray-500">
+                <a href="<?php echo CONFIG['reservationUrl'] ?>"
+                   class="text-sm font-medium text-indigo-600 hover:text-indigo-900" target="_blank">Réserver sur
+                    Moffi</a>
+            </p>
         </div>
     </div>
-    <div class="row align-items-start">
+    <div>
         <?php foreach ($planning as $key => $week): ?>
-            <div class="row align-items-start">
-                <div class="col-lg-12 col-xl-2 text-center pt-4 pb-3">
-                    <h5 class="text-muted">
-                        Semaine
-                    </h5>
-                    <h3 class="card-title <?php echo ($week['weeknumber'] == date('W')) ? 'text-danger' : 'text-muted' ?>">
-                        n°<?php echo $week['weeknumber'] ?>
+            <div class="bg-gray-50 px-3 rounded-lg ring-1 ring-gray-300">
+                <div>
+                    <h3 class="text-base text-center font-semibold text-gray-600 tracking-wide pt-3">
+                        <span class="uppercase">
+                            Semaine n°<?php echo $week['weeknumber'] ?>
+                        </span>
+                        <?php if ($week['weeknumber'] == date('W')) : ?>
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-indigo-500">Semaine actuelle</span>
+                        <?php endif ?>
                     </h3>
-                    <?php if ($week['weeknumber'] == date('W')) : ?>
-                        <p class="small text-danger">Semaine actuelle</p>
-                    <?php endif ?>
                 </div>
-                <?php foreach ($week['days'] as $daynumber => $day): ?>
-                    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-2">
-                        <div class="card mb-3 small <?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-light border-danger' : '' ?>">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <?php echo strftime('%A %d %B', $day['date']) ?>
-                                    <small class="text-muted"><?php echo '(' . count($day['presence']) . ' pers.)' ?></small>
-                                </h5>
-                                <p class="card-text">
-                                    <?php
-                                    $nobody = true;
-                                    foreach ($day['presence'] as $person) {
-                                        echo $person['firstname'] . ' ' . $person['lastname'] . '<br />';
-                                        echo '<small class="text-muted">(' . $person['email'] . ')</small><br />';
-                                        $nobody = false;
-                                    }
-                                    ?>
-                                    <small class="text-muted"><?php echo ($nobody && $date_end_reservation < $day['date']) ? 'Non réservable actuellement' : '' ?></small>
-                                </p>
-                                <p class="text-muted mb-0">
-                                    <small>Données du <?php echo strftime('%d/%m/%Y %H:%M', $day['filetime']) ?></small>
-                                </p>
+                <div class="grid 2xl:grid-cols-5 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-8">
+                    <?php foreach ($week['days'] as $daynumber => $day): ?>
+                        <div class="flex flex-col py-4">
+                            <div class="shadow overflow-hidden border sm:rounded-lg <?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'border-indigo-500' : 'border-gray-300' ?>">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="<?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-indigo-100' : 'bg-gray-50' ?>">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                                            <?php echo strftime('%A %d %b', $day['date']) ?>
+                                            <span class="text-xs text-gray-400">
+                                                <?php echo '(' . count($day['presence']) . ' pers.)' ?>
+                                            </span>
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    <?php $nobody = true; ?>
+                                    <?php foreach ($day['presence'] as $person): ?>
+                                        <?php $nobody = false; ?>
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10">
+                                                        <img class="h-10 w-10 border border-grey-50 rounded-full"
+                                                             src="<?php echo $person['avatar'] ?? 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($person['email']))) . '?s=200&d=robohash' ?>"
+                                                             alt="">
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            <?php echo $person['firstname'] ?>
+                                                            <span class="text-xs uppercase">
+                                                            <?php echo $person['lastname'] ?>
+                                                        </span>
+                                                        </div>
+                                                        <div class="text-xs text-gray-500">
+                                                            <?php echo $person['email'] ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach ?>
+                                    <?php if ($nobody && $date_end_reservation < $day['date']): ?>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-center text-gray-500">
+                                                    Non réservable actuellement
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endif ?>
+                                    </tbody>
+                                    <tfoot class="<?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-indigo-100' : 'bg-gray-50' ?>">
+                                    <tr>
+                                        <td class="px-6 py-2 whitespace-nowrap">
+                                            <div class="text-xs text-center text-gray-600">
+                                                Données du <?php echo strftime('%d/%m/%Y %H:%M', $day['filetime']) ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach ?>
+                    <?php endforeach ?>
+                </div>
             </div>
         <?php endforeach ?>
     </div>
