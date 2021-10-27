@@ -112,8 +112,8 @@ for ($i = 0; $i <= 27; $i++) {
             <p class="mt-1 text-3xl font-extrabold text-gray-900">
                 <?php echo CONFIG['title'] ?>
             </p>
-            <p class="mt-1 mx-auto text-gray-500 text-sm font-medium">
-                Planning des prochaines semaines - 
+            <p class="mt-1 mb-2 mx-auto text-gray-500 text-sm font-medium">
+                Planning des prochaines semaines -
                 <a href="<?php echo CONFIG['reservationUrl'] ?>"
                    class="text-indigo-600 hover:text-indigo-900" target="_blank">
                     Réserver sur Moffi
@@ -134,9 +134,9 @@ for ($i = 0; $i <= 27; $i++) {
                         <?php endif ?>
                     </h3>
                 </div>
-                <div class="grid 2xl:grid-cols-5 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-8">
+                <div class="grid 2xl:grid-cols-5 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-8 py-4">
                     <?php foreach ($week['days'] as $daynumber => $day): ?>
-                        <div class="flex flex-col py-4">
+                        <div class="flex flex-col">
                             <div class="shadow overflow-hidden border rounded-lg <?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'border-indigo-500' : 'border-gray-300' ?>">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="<?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-indigo-100' : 'bg-gray-50' ?>">
