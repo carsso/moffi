@@ -105,7 +105,7 @@ for ($i = 0; $i <= 27; $i++) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer" />
-    <meta http-equiv="refresh" content="3600">
+    <meta http-equiv="refresh" content="600">
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <title><?php echo CONFIG['title'] ?></title>
 </head>
