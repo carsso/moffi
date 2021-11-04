@@ -79,7 +79,7 @@ for ($i = 0; $i <= 27; $i++) {
     $array = getPresence($date_str);
     $filetime = $array[0];
     $presence = $array[1];
-    $names = array_column($presence, 'lastname');
+    $names = array_column($presence, 'email');
     array_multisort($names, SORT_ASC, $presence);
 
     $weeknumber = date('W', $date);
