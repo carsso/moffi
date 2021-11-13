@@ -64,7 +64,7 @@ function getFromApiOrCache($url)
 }
 
 $start_date = strtotime('Monday this week');
-if((int)date('N') == 7) {
+if((int)date('N') == 6 or (int)date('N') == 7) {
     $start_date = strtotime('Monday next week');
 }
 $date_end_reservation = strtotime('+20 day');
