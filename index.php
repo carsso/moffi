@@ -100,7 +100,7 @@ for ($i = 0; $i <= 27; $i++) {
 
 ?>
 <!doctype html>
-<html lang="fr" class="bg-gray-50">
+<html lang="fr" class="bg-gray-800">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -113,13 +113,13 @@ for ($i = 0; $i <= 27; $i++) {
 <div class="px-4">
     <div class="py-4 px-4">
         <div class="text-center">
-            <p class="mt-1 text-3xl font-extrabold text-gray-900">
+            <p class="mt-1 text-3xl font-extrabold text-gray-400">
                 <?php echo CONFIG['title'] ?>
             </p>
             <p class="mt-1 mb-2 mx-auto text-gray-500 text-sm font-medium">
                 Planning des prochaines semaines -
                 <a href="<?php echo CONFIG['reservationUrl'] ?>"
-                   class="text-indigo-600 hover:text-indigo-900" target="_blank">
+                   class="text-purple-500 hover:text-purple-700" target="_blank">
                     Réserver sur Moffi
                 </a>
             </p>
@@ -127,34 +127,34 @@ for ($i = 0; $i <= 27; $i++) {
     </div>
     <div>
         <?php foreach ($planning as $key => $week): ?>
-            <div class="bg-white px-3 rounded-lg ring-1 ring-gray-300">
+            <div class="bg-gray-700 px-3 rounded-lg ring-1 ring-gray-900">
                 <div>
-                    <h3 class="text-base text-center font-semibold text-gray-600 tracking-wide pt-3">
+                    <h3 class="text-base text-center font-semibold text-gray-400 tracking-wide pt-3">
                         <span class="uppercase">
                             Semaine n°<?php echo $week['weeknumber'] ?>
                         </span>
                         <?php if ($week['weeknumber'] == date('W')) : ?>
-                            <span class="ml-2 inline-flex items-center px-2 py-0.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-indigo-500">Semaine actuelle</span>
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-purple-600">Semaine actuelle</span>
                         <?php endif ?>
                     </h3>
                 </div>
                 <div class="grid 2xl:grid-cols-5 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-8 py-4">
                     <?php foreach ($week['days'] as $daynumber => $day): ?>
                         <div class="flex flex-col">
-                            <div class="shadow overflow-hidden border rounded-lg <?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'border-indigo-500' : 'border-gray-300' ?>">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="<?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-indigo-100' : 'bg-gray-50' ?>">
+                            <div class="shadow overflow-hidden border rounded-lg border-gray-900">
+                                <table class="min-w-full divide-y divide-gray-800">
+                                    <thead class="<?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-purple-900' : 'bg-gray-800' ?>">
                                     <tr>
                                         <th scope="col"
-                                            class="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                                            class="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
                                             <?php echo strftime('%A %d %b', $day['date']) ?>
-                                            <span class="text-xs text-gray-400">
+                                            <span class="text-xs text-gray-600">
                                                 <?php echo '(' . count($day['presence']) . ' pers.)' ?>
                                             </span>
                                         </th>
                                     </tr>
                                     </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    <tbody class="bg-gray-700 divide-y divide-gray-900">
                                     <?php $nobody = true; ?>
                                     <?php foreach ($day['presence'] as $person): ?>
                                         <?php $nobody = false; ?>
@@ -162,18 +162,18 @@ for ($i = 0; $i <= 27; $i++) {
                                             <td class="px-4 py-2 whitespace-nowrap">
                                                 <div class="flex items-center">
                                                     <div class="flex-shrink-0 h-10 w-10">
-                                                        <img class="h-10 w-10 border border-grey-50 rounded-full"
+                                                        <img class="h-10 w-10 border border-gray-800 bg-gray-900 rounded-full"
                                                              src="<?php echo $person['avatar'] ?? 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($person['email']))) . '?s=200&d=robohash' ?>"
                                                              alt="">
                                                     </div>
                                                     <div class="ml-4">
-                                                        <div class="text-sm font-medium text-gray-900">
+                                                        <div class="text-sm font-medium text-gray-400">
                                                             <?php echo $person['firstname'] ?>
                                                             <span class="text-xs uppercase">
                                                             <?php echo $person['lastname'] ?>
                                                         </span>
                                                         </div>
-                                                        <div class="text-xs text-gray-500">
+                                                        <div class="text-xs text-gray-900">
                                                             <?php echo $person['email'] ?>
                                                         </div>
                                                     </div>
@@ -181,20 +181,24 @@ for ($i = 0; $i <= 27; $i++) {
                                             </td>
                                         </tr>
                                     <?php endforeach ?>
-                                    <?php if ($nobody && $date_end_reservation < $day['date']): ?>
+                                    <?php if ($nobody): ?>
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-center text-gray-500">
-                                                    Non réservable actuellement
+                                                <div class="text-sm text-center text-gray-900">
+                                                    <?php if ($date_end_reservation < $day['date']): ?>
+                                                        Non réservable actuellement
+                                                    <?php else: ?>
+                                                        Aucune réservation
+                                                    <?php endif ?>
                                                 </div>
                                             </td>
                                         </tr>
                                     <?php endif ?>
                                     </tbody>
-                                    <tfoot class="<?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-indigo-100' : 'bg-gray-50' ?>">
+                                    <tfoot class="<?php echo date('Y-m-d', $day['date']) == date('Y-m-d') ? 'bg-purple-900' : 'bg-gray-800' ?>">
                                     <tr>
                                         <td class="px-6 py-2 whitespace-nowrap">
-                                            <div class="text-xs text-center text-gray-600">
+                                            <div class="text-xs text-center text-gray-500">
                                                 Données du <?php echo strftime('%d/%m/%Y %H:%M', $day['filetime']) ?>
                                             </div>
                                         </td>
