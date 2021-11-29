@@ -143,18 +143,14 @@ for ($i = 0; $i <= 27; $i++) {
                         <div class="flex flex-col">
                             <div class="shadow overflow-hidden border rounded-lg border-gray-900">
                                 <table class="min-w-full divide-y divide-gray-800">
-                                    <thead class="bg-gray-800">
+                                    <thead class="<?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'bg-purple-600' : 'bg-gray-800' ?>">
                                     <tr>
                                         <th scope="col"
-                                            class="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
+                                            class="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-200' : 'text-gray-400' ?>">
                                             <?php echo strftime('%A %d %b', $day['date']) ?>
-                                            <span class="text-xs text-gray-600">
+                                            <span class="text-xs <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-400' : 'text-gray-600' ?>">
                                                 <?php echo '(' . count($day['presence']) . ' pers.)' ?>
                                             </span>
-
-                                            <?php if (date('Y-m-d', $day['date']) == date('Y-m-d')) : ?>
-                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-purple-600">Aujourd'hui</span>
-                                            <?php endif ?>
                                         </th>
                                     </tr>
                                     </thead>
@@ -199,10 +195,10 @@ for ($i = 0; $i <= 27; $i++) {
                                         </tr>
                                     <?php endif ?>
                                     </tbody>
-                                    <tfoot class="bg-gray-800">
+                                    <tfoot class="<?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'bg-purple-600' : 'bg-gray-800' ?>">
                                     <tr>
                                         <td class="px-6 py-2 whitespace-nowrap">
-                                            <div class="text-xs text-center text-gray-500">
+                                            <div class="text-xs text-center <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-200' : 'text-gray-500' ?>">
                                                 Données du <?php echo strftime('%d/%m/%Y %H:%M', $day['filetime']) ?>
                                             </div>
                                         </td>
