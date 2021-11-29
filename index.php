@@ -142,7 +142,7 @@ for ($i = 0; $i <= 27; $i++) {
                     <?php foreach ($week['days'] as $daynumber => $day): ?>
                         <div class="flex flex-col">
                             <div class="shadow overflow-hidden border rounded-lg border-gray-900">
-                                <table class="min-w-full divide-y divide-gray-800">
+                                <table class="min-w-full divide-y divide-gray-900">
                                     <thead class="<?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'bg-purple-900' : 'bg-gray-800' ?>">
                                     <tr>
                                         <th scope="col"
