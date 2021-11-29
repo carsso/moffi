@@ -143,10 +143,10 @@ for ($i = 0; $i <= 27; $i++) {
                         <div class="flex flex-col">
                             <div class="shadow overflow-hidden border rounded-lg border-gray-900">
                                 <table class="min-w-full divide-y divide-gray-800">
-                                    <thead class="<?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'bg-purple-600' : 'bg-gray-800' ?>">
+                                    <thead class="<?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'bg-purple-900' : 'bg-gray-800' ?>">
                                     <tr>
                                         <th scope="col"
-                                            class="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-200' : 'text-gray-400' ?>">
+                                            class="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-300' : 'text-gray-400' ?>">
                                             <?php echo strftime('%A %d %b', $day['date']) ?>
                                             <span class="text-xs <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-400' : 'text-gray-600' ?>">
                                                 <?php echo '(' . count($day['presence']) . ' pers.)' ?>
@@ -195,10 +195,10 @@ for ($i = 0; $i <= 27; $i++) {
                                         </tr>
                                     <?php endif ?>
                                     </tbody>
-                                    <tfoot class="<?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'bg-purple-600' : 'bg-gray-800' ?>">
+                                    <tfoot class="<?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'bg-purple-900' : 'bg-gray-800' ?>">
                                     <tr>
                                         <td class="px-6 py-2 whitespace-nowrap">
-                                            <div class="text-xs text-center <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-200' : 'text-gray-500' ?>">
+                                            <div class="text-xs text-center <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-400' : 'text-gray-500' ?>">
                                                 Données du <?php echo strftime('%d/%m/%Y %H:%M', $day['filetime']) ?>
                                             </div>
                                         </td>
