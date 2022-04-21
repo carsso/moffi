@@ -160,9 +160,9 @@ if((int)date('N') == 6 or (int)date('N') == 7) {
 }
 $delay_days = !empty(COWORKING['plageMaxi']['minutes']) ? round(COWORKING['plageMaxi']['minutes']/60/24) : 30;
 $date_end_reservation = strtotime('+'.$delay_days.' days');
+$date_delay_days = strtotime('Sunday next week ', $date_end_reservation);
 $planning = [];
-for ($i = 0; $i <= $delay_days + 7; $i++) {
-    $date = strtotime('+' . $i . ' day', $start_date);
+for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
     $date_str = date('Y-m-d', $date);
     $weekday = (int)date('N', $date);
     if ($weekday == 6 or $weekday == 7) {
