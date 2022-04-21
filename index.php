@@ -1,5 +1,6 @@
 <?php
 if (!file_exists(__DIR__ . '/config.php')) {
+    http_response_code(500);
     die('Missing configuration file');
 }
 require_once(__DIR__ . '/config.php');
@@ -10,45 +11,132 @@ if (!$page) {
     $page = 'index';
 }
 if (!isset($config[$page])) {
-    header("HTTP/1.0 404 Not Found");
-    echo 'C\'est pas le bon endroit';
+    http_response_code(404);
+    echo 'This page does not exist';
     die;
 }
+if(empty($login['username']) || empty($login['password'])) {
+    http_response_code(500);
+    die('Missing login credentials in config file');
+}
 define('CONFIG', $config[$page]);
+define('LOGIN', $login);
+define('CACHE_DIR', __DIR__ . '/cache/');
+define('MOFFI_API', 'https://api.moffi.io/api/');
 
-setlocale(LC_TIME, "fr_FR.utf8");
-function getPresence($date_str = '2021-10-04')
+function login()
 {
-    $workspace = CONFIG['workspaceId'];
-    $array = getFromApiOrCache('https://api.moffi.io/api/workspaces/' . $workspace . '/present?start=' . $date_str . 'T00:00:00.036Z&end=' . $date_str . 'T23:59:59.036Z');
+    $cache_file = CACHE_DIR . 'bearer.cache';
+    $bearer = null;
+    if (file_exists($cache_file)) {
+        $bearer = file_get_contents($cache_file);
+    }
+
+    if(!empty($bearer)) {
+        define('BEARER', $bearer);
+        $array = getFromApiOrCache('users/me', 600);
+        $filetime = $array[0];
+        $json = $array[1];
+        $me = json_decode($json, true);
+        if(empty($me['error'])) {
+            # login still valid
+            return true;
+        }
+    }
+
+    $array = [
+        'captcha' => 'NOT_PROVIDED',
+        'email' => LOGIN['username'],
+        'password' => LOGIN['password'],
+    ];
+    $content = json_encode($array);
+    $array = getFromApiOrCache('signin', 120, false, 'POST', $content);
+    $filetime = $array[0];
+    $json = $array[1];
+    $signin = json_decode($json, true);
+
+    if(!empty($signin['error'])) {
+        http_response_code(500);
+        die('Cannot login to Moffi: ' . $signin['error']);
+    }
+    if(empty($signin['token'])) {
+        http_response_code(500);
+        die('No token found in signin response');
+    }
+    $bearer = $signin['token'];
+    file_put_contents($cache_file, $bearer);
+    clearstatcache();
+
+    define('BEARER', $bearer);
+}
+
+function getCoworking()
+{
+    $reservationUrl = CONFIG['reservationUrl'];
+    if(!preg_match('/\/coworking\/(.*)$/', $reservationUrl, $matches)) {
+        http_response_code(500);
+        die('Invalid reservationUrl : '.$reservationUrl);
+    }
+    $array = getFromApiOrCache('workspaces/url/coworking/' . $matches[1], 60 * 60 * 12);
+    $filetime = $array[0];
+    $json = $array[1];
+    $coworking = json_decode($json, true);
+    return $coworking;
+}
+
+function getAvailabilities($date_str = '2021-10-04')
+{
+    $workspaceId = COWORKING['id'];
+    $buildingId = COWORKING['building']['id'];
+    $floor = COWORKING['floor']['level'];
+    $array = getFromApiOrCache('workspaces/availabilities?buildingId=' . $buildingId . '&startDate=' . $date_str . 'T00:00:00.036Z&endDate=' . $date_str . 'T23:59:59.036Z&places=1&floor=' . $floor . '&period=DAY&workspaceId=' . $workspaceId);
     $filetime = $array[0];
     $json = $array[1];
     return [$filetime, json_decode($json, true)];
 }
 
-function getFromApiOrCache($url)
+function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method = 'GET', $content = null)
 {
-    $cache_path = 'cache/';
+    if(empty($url)) {
+        http_response_code(500);
+        die('Empty url provided');
+    }
+    $url = MOFFI_API . $url;
 
     # clear old expired cache
-    if ($handle = opendir($cache_path)) {
+    if ($handle = opendir(CACHE_DIR)) {
         while (false !== ($file = readdir($handle))) {
             if (preg_match("/\.cache$/", $file)) {
-                $filelastmodified = filemtime($cache_path . $file);
+                $filelastmodified = filemtime(CACHE_DIR . $file);
                 if ((time() - $filelastmodified) > 24 * 3600) {
-                    unlink($cache_path . $file);
+                    unlink(CACHE_DIR . $file);
                 }
             }
         }
         closedir($handle);
     }
 
+    $headers = ['Content-Type: application/json'];
+    if($injectLogin) {
+        $headers[] = 'Authorization: Bearer '.BEARER;
+    }
+
+    $opts = [
+        'http' => [
+            'method' => $method,
+            'header' => join("\r\n", $headers),
+            'content' => $content,
+        ]
+    ];
+    $context = stream_context_create($opts);
+
     # handle cache
-    $cache_file = $cache_path . md5($url) . '.cache';
+    $cache_file = CACHE_DIR . md5($method.$url.json_encode($content)) . '.cache';
     if (file_exists($cache_file)) {
-        if (time() - filemtime($cache_file) > (3600 + random_int(0, 3600))) {
+        if (time() - filemtime($cache_file) > ($duration + random_int(0, $duration))) {
             // too old, re-fetch
-            $cache = file_get_contents($url);
+
+            $cache = file_get_contents($url, false, $context);
             file_put_contents($cache_file, $cache);
             clearstatcache();
         } else {
@@ -56,31 +144,43 @@ function getFromApiOrCache($url)
         }
     } else {
         // no cache, create one
-        $cache = file_get_contents($url);
+        $cache = file_get_contents($url, false, $context);
         file_put_contents($cache_file, $cache);
         clearstatcache();
     }
     return [filemtime($cache_file), file_get_contents($cache_file)];
 }
 
+login();
+define('COWORKING', getCoworking());
+
 $start_date = strtotime('Monday this week');
 if((int)date('N') == 6 or (int)date('N') == 7) {
     $start_date = strtotime('Monday next week');
 }
-$date_end_reservation = strtotime('+20 day');
+$delay_days = !empty(COWORKING['plageMaxi']['minutes']) ? round(COWORKING['plageMaxi']['minutes']/60/24) : 30;
+$date_end_reservation = strtotime('+'.$delay_days.' days');
 $planning = [];
-for ($i = 0; $i <= 27; $i++) {
+for ($i = 0; $i <= $delay_days + 7; $i++) {
     $date = strtotime('+' . $i . ' day', $start_date);
     $date_str = date('Y-m-d', $date);
     $weekday = (int)date('N', $date);
     if ($weekday == 6 or $weekday == 7) {
         continue;
     }
-    $array = getPresence($date_str);
+    $array = getAvailabilities($date_str);
     $filetime = $array[0];
-    $presence = $array[1];
-    $names = array_column($presence, 'email');
-    array_multisort($names, SORT_ASC, $presence);
+    $availability = $array[1];
+    $users = [];
+    foreach($availability[0]['seats'] as $seat) {
+        if(!empty($seat['user'])) {
+            $user = $seat['user'];
+            $user['seat'] = $seat['seat']['fullname'];
+            $users[] = $user;
+        }
+    }
+    $names = array_column($users, 'email');
+    array_multisort($names, SORT_ASC, $users);
 
     $weeknumber = date('W', $date);
     $year = date('Y', $date);
@@ -93,7 +193,7 @@ for ($i = 0; $i <= 27; $i++) {
     }
     $planning[$key]['days'][$weekday] = [
         'date' => $date,
-        'presence' => $presence,
+        'users' => $users,
         'filetime' => $filetime,
     ];
 }
@@ -107,20 +207,20 @@ for ($i = 0; $i <= 27; $i++) {
     <meta name="referrer" content="no-referrer" />
     <meta http-equiv="refresh" content="600">
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-    <title><?php echo CONFIG['title'] ?></title>
+    <title><?php echo COWORKING['title'] ?></title>
 </head>
 <body>
 <div class="px-4">
     <div class="py-4 px-4">
         <div class="text-center">
             <p class="mt-1 text-3xl font-extrabold text-gray-400">
-                <?php echo CONFIG['title'] ?>
+                <?php echo COWORKING['title'] ?>
             </p>
             <p class="mt-1 mb-2 mx-auto text-gray-500 text-sm font-medium">
-                Planning des prochaines semaines -
+                Booking limit is <?php echo $delay_days ?> days in advance -
                 <a href="<?php echo CONFIG['reservationUrl'] ?>"
                    class="text-purple-500 hover:text-purple-700" target="_blank">
-                    Réserver sur Moffi
+                    Book on Moffi
                 </a>
             </p>
         </div>
@@ -131,10 +231,10 @@ for ($i = 0; $i <= 27; $i++) {
                 <div>
                     <h3 class="text-base text-center font-semibold text-gray-400 tracking-wide pt-3">
                         <span class="uppercase">
-                            Semaine n°<?php echo $week['weeknumber'] ?>
+                            Week number <?php echo $week['weeknumber'] ?>
                         </span>
                         <?php if ($week['weeknumber'] == date('W')) : ?>
-                            <span class="ml-2 inline-flex items-center px-2 py-0.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-purple-600">Semaine actuelle</span>
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-purple-600">Current week</span>
                         <?php endif ?>
                     </h3>
                 </div>
@@ -147,31 +247,34 @@ for ($i = 0; $i <= 27; $i++) {
                                     <tr>
                                         <th scope="col"
                                             class="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-300' : 'text-gray-400' ?>">
-                                            <?php echo strftime('%A %d %b', $day['date']) ?>
+                                            <?php echo date('l F j', $day['date']) ?>
                                             <span class="text-xs <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-400' : 'text-gray-600' ?>">
-                                                <?php echo '(' . count($day['presence']) . ' pers.)' ?>
+                                                <?php echo '(' . count($day['users']) . ' bookings)' ?>
                                             </span>
                                         </th>
                                     </tr>
                                     </thead>
                                     <tbody class="bg-gray-700 divide-y divide-gray-900">
                                     <?php $nobody = true; ?>
-                                    <?php foreach ($day['presence'] as $person): ?>
+                                    <?php foreach ($day['users'] as $person): ?>
                                         <?php $nobody = false; ?>
                                         <tr>
                                             <td class="px-4 py-2 whitespace-nowrap">
                                                 <div class="flex items-center">
                                                     <div class="flex-shrink-0 h-10 w-10">
                                                         <img class="h-10 w-10 border border-gray-800 bg-gray-900 rounded-full"
-                                                             src="<?php echo $person['avatar'] ?? 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($person['email']))) . '?s=200&d=robohash' ?>"
-                                                             alt="">
+                                                            src="<?php echo $person['avatar'] ?? 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($person['email']))) . '?s=200&d=robohash' ?>"
+                                                            alt="">
                                                     </div>
                                                     <div class="ml-4">
                                                         <div class="text-sm font-medium text-gray-400">
                                                             <?php echo $person['firstname'] ?>
                                                             <span class="text-xs uppercase">
-                                                            <?php echo $person['lastname'] ?>
-                                                        </span>
+                                                                <?php echo $person['lastname'] ?>
+                                                            </span>
+                                                            <small  class="text-gray-600">
+                                                                (<?php echo $person['seat'] ?>)
+                                                            </small>
                                                         </div>
                                                         <div class="text-xs text-gray-900">
                                                             <?php echo $person['email'] ?>
@@ -186,9 +289,9 @@ for ($i = 0; $i <= 27; $i++) {
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-center text-gray-900">
                                                     <?php if ($date_end_reservation < $day['date']): ?>
-                                                        Non réservable actuellement
+                                                        Not bookable for now
                                                     <?php else: ?>
-                                                        Aucune réservation
+                                                        No booking
                                                     <?php endif ?>
                                                 </div>
                                             </td>
@@ -199,7 +302,7 @@ for ($i = 0; $i <= 27; $i++) {
                                     <tr>
                                         <td class="px-6 py-2 whitespace-nowrap">
                                             <div class="text-xs text-center <?php echo (date('Y-m-d', $day['date']) == date('Y-m-d')) ? 'text-gray-400' : 'text-gray-500' ?>">
-                                                Données du <?php echo strftime('%d/%m/%Y %H:%M', $day['filetime']) ?>
+                                                Data as of <?php echo date('Y-m-d H:i', $day['filetime']) ?>
                                             </div>
                                         </td>
                                     </tr>

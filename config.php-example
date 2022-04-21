@@ -1,13 +1,14 @@
 <?php
+$login = [
+    'username' => '',
+    'password' => '',
+];
+
 $config = [
     'index' => [
         'reservationUrl' => 'https://www.moffi.io/fr/environnement/mycompany/coworking/1234-MyFirstOffice',
-        'workspaceId'    => 'd64b69ac95deb4b9dba20ea0b77959dc',
-        'title'          => 'My First Office Space',
     ],
     'myoffice' => [
         'reservationUrl' => 'https://www.moffi.io/fr/environnement/mycompany/coworking/1234-MySecondOffice',
-        'workspaceId'    => '43b89b771730e0986527801533e8bf9d',
-        'title'          => 'My Second Office Space',
     ],
 ];
