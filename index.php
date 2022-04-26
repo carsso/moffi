@@ -173,10 +173,13 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
     }
     $array = getAvailabilities($date_str);
     $filetime = $array[0];
-    $availability = $array[1];
+    $availability = $array[1][0];
     $users = [];
-    foreach($availability[0]['seats'] as $seat) {
+    foreach($availability['seats'] as $seat) {
         if(!empty($seat['user'])) {
+            if($seat['status'] == 'AGENDA') {
+                continue;
+            }
             $user = $seat['user'];
             $user['seat'] = $seat['seat']['fullname'];
             $users[] = $user;
@@ -197,6 +200,8 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
     $planning[$key]['days'][$weekday] = [
         'date' => $date,
         'users' => $users,
+        'availability' => $availability['availability'],
+        'availabilityStatus' => $availability['availabilityStatus'],
         'filetime' => $filetime,
     ];
 }
@@ -291,8 +296,12 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-center text-gray-900">
-                                                    <?php if ($date_end_reservation < $day['date']): ?>
-                                                        Not bookable for now
+                                                    <?php if ($day['availability'] == 'UNAVAILABLE'): ?>
+                                                        <?php if ($day['availabilityStatus'] == 'START_TOO_LATE'): ?>
+                                                            Not bookable for now
+                                                        <?php else: ?>
+                                                            Not bookable
+                                                        <?php endif ?>
                                                     <?php else: ?>
                                                         No booking
                                                     <?php endif ?>
