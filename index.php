@@ -84,12 +84,21 @@ function getCoworking()
     return $coworking;
 }
 
-function getAvailabilities($date_str = '2021-10-04')
+function getAvailabilities($dateStr = '2021-10-04')
 {
     $workspaceId = COWORKING['id'];
     $buildingId = COWORKING['building']['id'];
     $floor = COWORKING['floor']['level'];
-    $array = getFromApiOrCache('workspaces/availabilities?buildingId=' . $buildingId . '&startDate=' . $date_str . 'T00:00:00.036Z&endDate=' . $date_str . 'T23:59:59.036Z&places=1&floor=' . $floor . '&period=DAY&workspaceId=' . $workspaceId);
+
+    $startDate = new DateTime($dateStr.' 00:00:01', new DateTimeZone(COWORKING['timezone']));
+    $startDate->setTimezone(new DateTimeZone("UTC"));
+    $startDateStr = $startDate->format("Y-m-d\TH:i:s.v\Z");
+
+    $endDate = new DateTime($dateStr.' 23:59:59', new DateTimeZone(COWORKING['timezone']));
+    $endDate->setTimezone(new DateTimeZone("UTC"));
+    $endDateStr = $endDate->format("Y-m-d\TH:i:s.v\Z");
+ 
+    $array = getFromApiOrCache('workspaces/availabilities?buildingId=' . $buildingId . '&startDate=' . $startDateStr . '&endDate=' . $endDateStr . '&places=1&floor=' . $floor . '&period=DAY&workspaceId=' . $workspaceId);
     $filetime = $array[0];
     $json = $array[1];
     return [$filetime, json_decode($json, true)];
