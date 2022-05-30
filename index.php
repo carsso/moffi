@@ -192,6 +192,23 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
             $user = $seat['user'];
             $user['seat'] = $seat['seat']['fullname'];
             $users[] = $user;
+        } elseif($seat['status'] == 'DISABLED') {
+            if(!empty(CONFIG['showBlocked'])) {
+                $name = $seat['seat']['name'];
+                $name = preg_replace('/_LK$/', '', $name);
+                $name = preg_replace('/_LK_/', '_', $name);
+                $name = preg_replace('/^\d+_/', '', $name);
+                if(strlen($name) > 3) {
+                    $users[] = [
+                        'id' => $seat['seat']['id'],
+                        'firstname' => '',
+                        'lastname' => $name,
+                        'email' => strtolower($name.'_'.$seat['seat']['id']),
+                        'type' => 'blocked',
+                        'seat' => $seat['seat']['fullname'],
+                    ];
+                }
+            }
         }
     }
     $names = array_column($users, 'email');
@@ -293,9 +310,15 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
                                                                 (<?php echo $person['seat'] ?>)
                                                             </small>
                                                         </div>
-                                                        <div class="text-xs text-gray-900">
-                                                            <?php echo $person['email'] ?>
-                                                        </div>
+                                                        <?php if($person['type'] == 'blocked'): ?>
+                                                            <div class="text-xs text-gray-900">
+                                                                Blocked/Automatically booked
+                                                            </div>
+                                                        <?php else: ?>
+                                                            <div class="text-xs text-gray-900">
+                                                                <?php echo $person['email'] ?>
+                                                            </div>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </td>

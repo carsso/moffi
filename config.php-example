@@ -7,6 +7,7 @@ $login = [
 $config = [
     'index' => [
         'reservationUrl' => 'https://www.moffi.io/fr/environnement/mycompany/coworking/1234-MyFirstOffice',
+        'showBlocked' => 1,
     ],
     'myoffice' => [
         'reservationUrl' => 'https://www.moffi.io/fr/environnement/mycompany/coworking/1234-MySecondOffice',
