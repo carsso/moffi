@@ -81,6 +81,10 @@ function getCoworking()
     $filetime = $array[0];
     $json = $array[1];
     $coworking = json_decode($json, true);
+    if(!$coworking) {
+        http_response_code(500);
+        die('Coworking space not found');
+    }
     return $coworking;
 }
 
