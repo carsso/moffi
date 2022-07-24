@@ -296,16 +296,16 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
                                     <?php $nobody = true; ?>
                                     <?php foreach ($day['users'] as $person): ?>
                                         <?php $nobody = false; ?>
-                                        <tr>
+                                        <tr title="<?php echo ($person['type'] == 'blocked') ? 'Blocked/Automatically booked' : $person['email'] ?>">
                                             <td class="px-4 py-2 whitespace-nowrap">
                                                 <div class="flex items-center">
-                                                    <div class="flex-shrink-0 h-10 w-10">
-                                                        <img class="h-10 w-10 border border-gray-800 bg-gray-900 rounded-full"
-                                                            src="<?php echo $person['avatar'] ?? 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($person['email']))) . '?s=200&d=robohash' ?>"
+                                                    <div class="flex-shrink-0 h-5 w-5">
+                                                        <img class="h-5 w-5 border border-gray-800 bg-gray-900 rounded-full"
+                                                            src="<?php echo $person['avatar'] ?? 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($person['email']))) . '?s=50&d=robohash' ?>"
                                                             alt="">
                                                     </div>
-                                                    <div class="ml-4">
-                                                        <div class="text-sm font-medium text-gray-400">
+                                                    <div class="ml-2">
+                                                        <div class="text-sm font-medium <?php echo ($person['type'] == 'blocked') ? 'text-gray-900' : 'text-gray-400' ?>">
                                                             <?php echo $person['firstname'] ?>
                                                             <span class="text-xs uppercase">
                                                                 <?php echo $person['lastname'] ?>
@@ -314,15 +314,6 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
                                                                 (<?php echo $person['seat'] ?>)
                                                             </small>
                                                         </div>
-                                                        <?php if($person['type'] == 'blocked'): ?>
-                                                            <div class="text-xs text-gray-900">
-                                                                Blocked/Automatically booked
-                                                            </div>
-                                                        <?php else: ?>
-                                                            <div class="text-xs text-gray-900">
-                                                                <?php echo $person['email'] ?>
-                                                            </div>
-                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </td>
