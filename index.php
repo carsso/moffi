@@ -5,7 +5,7 @@ if (!file_exists(__DIR__ . '/config.php')) {
 }
 require_once(__DIR__ . '/config.php');
 
-$page = preg_replace('/^\//', '', $_SERVER['REQUEST_URI']);
+$page = preg_replace('/\?.*$/', '', preg_replace('/^\//', '', $_SERVER['REQUEST_URI']));
 $page = preg_replace('/\.php$/', '', $page);
 if (!$page) {
     $page = 'index';
@@ -23,6 +23,8 @@ define('CONFIG', $config[$page]);
 define('LOGIN', $login);
 define('CACHE_DIR', __DIR__ . '/cache/');
 define('MOFFI_API', 'https://api.moffi.io/api/');
+
+define('SHOW_LAST_WEEK', isset($_GET['lastWeek']) and $_GET['lastWeek'] ? true : false);
 
 function login()
 {
@@ -167,9 +169,14 @@ function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method 
 login();
 define('COWORKING', getCoworking());
 
-$start_date = strtotime('Monday this week');
+$time = time();
+if(SHOW_LAST_WEEK) {
+  $time = strtotime('-7 days');
+}
+
+$start_date = strtotime('Monday this week', $time);
 if((int)date('N') == 6 or (int)date('N') == 7) {
-    $start_date = strtotime('Monday next week');
+    $start_date = strtotime('Monday next week', $time);
 }
 $delay_days = !empty(COWORKING['plageMaxi']['minutes']) ? round(COWORKING['plageMaxi']['minutes']/60/24) : 30;
 $date_end_reservation = strtotime('+'.$delay_days.' days');
@@ -273,6 +280,9 @@ for ($date = $start_date; $date <= $date_delay_days; $date += 24 * 3600) {
                         </span>
                         <?php if ($week['weeknumber'] == date('W')) : ?>
                             <span class="ml-2 inline-flex items-center px-2 py-0.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-purple-600">Current week</span>
+                            <?php if (!SHOW_LAST_WEEK): ?>
+                              <small class="ml-2"><a href="?lastWeek=1" class="text-purple-500 font-normal hover:text-purple-700">Show last week</a></small>
+                            <?php endif ?>
                         <?php endif ?>
                     </h3>
                 </div>
