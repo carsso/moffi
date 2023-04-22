@@ -157,12 +157,17 @@ function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method 
         $cache = file_get_contents($url, false, $context);
         preg_match('/([0-9])\d+/',$http_response_header[0],$matches);
         $responsecode = intval($matches[0]);
-        if($responsecode >= 300)
-        {
-            die('An error occured requesting '.$method.' '.$url."\n".$cache);
-        }
         file_put_contents($cache_file, $cache);
         clearstatcache();
+        if($responsecode >= 300)
+        {
+            // Errors are cached to avoid flooding
+            echo 'A '.$responsecode.' error occured requesting '.$method.' '.$url."<br/>\n";
+            echo 'Next try in '.$duration.'s'."<br/>\n";
+            echo 'Response was : '."<br/>\n";
+            echo '<pre>'.$cache.'</pre>';
+            die();
+        }
     }
     return [filemtime($cache_file), file_get_contents($cache_file)];
 }
