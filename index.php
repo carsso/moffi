@@ -148,19 +148,19 @@ function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method 
 
     # handle cache
     $cache_file = CACHE_DIR . md5($method.$url.json_encode($content)) . '.cache';
-    if (file_exists($cache_file)) {
-        if (time() - filemtime($cache_file) > ($duration + random_int(0, $duration))) {
-            // too old, re-fetch
-
-            $cache = file_get_contents($url, false, $context);
-            file_put_contents($cache_file, $cache);
-            clearstatcache();
-        } else {
-            // cache is still fresh
-        }
-    } else {
-        // no cache, create one
+    if (file_exists($cache_file) && (time() - filemtime($cache_file) <= ($duration + random_int(0, $duration)))) {
+        // cache is still fresh
+    }
+    else
+    {
+        // too old or no cache, re-fetch/create cache
         $cache = file_get_contents($url, false, $context);
+        preg_match('/([0-9])\d+/',$http_response_header[0],$matches);
+        $responsecode = intval($matches[0]);
+        if($responsecode >= 300)
+        {
+            die('An error occured requesting '.$method.' '.$url."\n".$cache);
+        }
         file_put_contents($cache_file, $cache);
         clearstatcache();
     }
