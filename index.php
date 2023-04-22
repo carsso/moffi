@@ -22,7 +22,7 @@ if(empty($login['username']) || empty($login['password'])) {
 define('CONFIG', $config[$page]);
 define('LOGIN', $login);
 define('CACHE_DIR', __DIR__ . '/cache/');
-define('MOFFI_API', 'https://api.moffi.io/api/');
+define('MOFFI_API', 'https://gateway.moffi.io/api/');
 
 define('SHOW_LAST_WEEK', isset($_GET['lastWeek']) and $_GET['lastWeek'] ? true : false);
 
@@ -50,9 +50,10 @@ function login()
         'captcha' => 'NOT_PROVIDED',
         'email' => LOGIN['username'],
         'password' => LOGIN['password'],
+        'platform' => 'WEB',
     ];
     $content = json_encode($array);
-    $array = getFromApiOrCache('signin', 120, false, 'POST', $content);
+    $array = getFromApiOrCache('auth/signin', 120, false, 'POST', $content);
     $filetime = $array[0];
     $json = $array[1];
     $signin = json_decode($json, true);
@@ -61,11 +62,11 @@ function login()
         http_response_code(500);
         die('Cannot login to Moffi: ' . $signin['error']);
     }
-    if(empty($signin['token'])) {
+    if(empty($signin['accessToken'])) {
         http_response_code(500);
         die('No token found in signin response');
     }
-    $bearer = $signin['token'];
+    $bearer = $signin['accessToken'];
     file_put_contents($cache_file, $bearer);
     clearstatcache();
 
