@@ -36,11 +36,11 @@ function login()
 
     if(!empty($bearer)) {
         define('BEARER', $bearer);
-        $array = getFromApiOrCache('users/me', 600);
+        $array = getFromApiOrCache('users/me', 60, true, 'GET', null, true);
         $filetime = $array[0];
         $json = $array[1];
         $me = json_decode($json, true);
-        if(empty($me['error'])) {
+        if($me && is_array($me) && $me['id']) {
             # login still valid
             return true;
         }
@@ -71,6 +71,10 @@ function login()
     clearstatcache();
 
     define('BEARER', $bearer);
+    header('X-NEW-MOFFI-LOGIN: true');
+
+    // clear users/me cache
+    getFromApiOrCache('users/me', 30, true, 'GET', null, false, true);
 }
 
 function getCoworking()
@@ -111,7 +115,7 @@ function getAvailabilities($dateStr = '2021-10-04')
     return [$filetime, json_decode($json, true)];
 }
 
-function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method = 'GET', $content = null)
+function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method = 'GET', $content = null, $doNotDie = false, $clearCache = false)
 {
     if(empty($url)) {
         http_response_code(500);
@@ -148,7 +152,7 @@ function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method 
 
     # handle cache
     $cache_file = CACHE_DIR . md5($method.$url.json_encode($content)) . '.cache';
-    if (file_exists($cache_file) && (time() - filemtime($cache_file) <= ($duration + random_int(0, $duration)))) {
+    if (!$clearCache && file_exists($cache_file) && (time() - filemtime($cache_file) <= ($duration + random_int(0, $duration)))) {
         // cache is still fresh
     }
     else
@@ -159,17 +163,16 @@ function getFromApiOrCache($url, $duration = 1200, $injectLogin = true, $method 
         $responsecode = intval($matches[0]);
         file_put_contents($cache_file, $cache);
         clearstatcache();
-        if($responsecode >= 300)
+        if($responsecode >= 300 && !$doNotDie)
         {
             // Errors are cached to avoid flooding
             echo 'A '.$responsecode.' error occured requesting '.$method.' '.$url."<br/>\n";
             echo 'Next try in '.$duration.'s'."<br/>\n";
-            echo 'Response was : '."<br/>\n";
-            echo '<pre>'.$cache.'</pre>';
+            echo 'Response in '.$cache_file."\n";
             die();
         }
     }
-    return [filemtime($cache_file), file_get_contents($cache_file)];
+    return [filemtime($cache_file), file_get_contents($cache_file), $cache_file];
 }
 
 login();
